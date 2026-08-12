@@ -1,24 +1,42 @@
 const CACHE_NAME = 'hightech-ps-v1';
-const ASSETS = [
-    './',
-    './index.html',
-    './style.css',
-    './cache.js',
-    './manifest.json'
+// قائمة بالملفات التي يجب تخزينها لعمل الصفحة بدون إنترنت
+const ASSETS_TO_CACHE = [
+  './',
+  './index.html',
+  './style.css',      // غير اسم الملف إن كان مختلفاً لديك
+  './script.js',     // غير اسم الملف إن كان مختلفاً لديك
+  './favicon.ico'     // أي صور أو خطوط تستخدمها الصفحة
 ];
 
-self.addEventListener('install', (e) => {
-    e.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-    );
-    self.skipWaiting();
+// تثبيت الكاش وتنزيل الملفات
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE);
+    }).then(() => self.skipWaiting())
+  );
 });
 
-self.addEventListener('activate', (e) => {
-    e.waitUntil(self.clients.claim());
+// تفعيل الكاش وحذف النسخ القديمة
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
 });
 
-self.addEventListener('fetch', (e) => {
-    e.respondWith(
-        caches.match(e.request).then((res) => res || fetch(e.request))
-    );
+// استدعاء الملفات من الكاش عند عدم وجود إنترنت
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      return cachedResponse || fetch(event.request);
+    })
+  );
+});
