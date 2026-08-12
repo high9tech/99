@@ -7,7 +7,32 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
-<body>
+<body <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then((reg) => {
+          console.log('Service Worker Registered');
+          
+          // تحديث نسبة التخزين في واجهة المستخدم (تلقائياً)
+          let progress = 0;
+          const interval = setInterval(() => {
+            progress += 10;
+            // افترضنا أن لديك عنصر يعرض النسبة المئوية
+            const percentElem = document.querySelector('.percent-text'); 
+            if (percentElem) percentElem.innerText = progress + '%';
+            
+            if (progress >= 100) {
+              clearInterval(interval);
+              const statusElem = document.querySelector('.status-text');
+              if (statusElem) statusElem.innerText = 'تم تخزين الصفحة بنجاح! جاهز للعمل أوفلاين.';
+            }
+          }, 200);
+        })
+        .catch((err) => console.log('Service Worker Failed:', err));
+    });
+  }
+</script>
 
     <div class="bg-glow"></div>
 
